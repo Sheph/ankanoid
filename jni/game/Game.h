@@ -16,6 +16,11 @@ public:
     void render();
 
 private:
+    static const UInt32 profileReportTimeoutMs_ = 3000;
+    static const UInt32 maxFPS_ = 60;
+
+    static UInt64 getTimeMs();
+
     TextureCollection textureCollection_;
 
     UInt32 gameWidth_;
@@ -24,6 +29,12 @@ private:
     UInt32 viewHeight_;
 
     Brick brick_;
+
+    UInt64 lastTimeMs_;
+    UInt32 numFrames_;
+    UInt32 accumRenderTimeMs_;
+    UInt32 accumTimeMs_;
+    UInt64 lastProfileReportTimeMs_;
 };
 
 #endif

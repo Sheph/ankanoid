@@ -21,7 +21,7 @@ public:
 
     void addAnimation(int id, const Animation& animation);
 
-    void draw(UInt32 deltaMs);
+    void render(UInt32 deltaMs);
 
     void startAnimation(int id);
 

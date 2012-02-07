@@ -28,7 +28,7 @@ void Sprite::addAnimation(int id, const Animation& animation)
     assert(res);
 }
 
-void Sprite::draw(UInt32 deltaMs)
+void Sprite::render(UInt32 deltaMs)
 {
     AnimationMap::const_iterator it = animations_.find(curAnimationId_);
 

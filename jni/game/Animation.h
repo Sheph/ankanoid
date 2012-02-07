@@ -19,6 +19,8 @@ public:
 
     bool finished(UInt32 timeMs) const;
 
+    UInt32 durationMs() const;
+
 private:
     typedef std::map<UInt32, AnimationFrame> AnimationFrameMap;
 

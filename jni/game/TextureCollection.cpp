@@ -1,5 +1,6 @@
 #include "TextureCollection.h"
 #include "PNGDecoder.h"
+#include "Logger.h"
 #include <GLES/gl.h>
 
 TextureCollection::TextureCollection()
@@ -17,6 +18,8 @@ bool TextureCollection::addTexture(const std::string& path, Texture& texture)
 
     if (!decoder.init())
     {
+        LOGE("Unable to load texture from \"%s\"\n", path.c_str());
+
         return false;
     }
 
@@ -24,6 +27,7 @@ bool TextureCollection::addTexture(const std::string& path, Texture& texture)
 
     if (!decoder.decode(data))
     {
+        LOGE("Error decoding texture from \"%s\"\n", path.c_str());
         return false;
     }
 
@@ -41,12 +45,20 @@ bool TextureCollection::addTexture(const std::string& path, Texture& texture)
          * may need to call glDeleteTextures, but we don't care for this app.
          */
 
+        LOGE("Error generating texture from \"%s\"\n", path.c_str());
+
         return false;
     }
 
     texture = Texture(id, decoder.width(), decoder.height());
 
     textures_.push_back(texture);
+
+    LOGI( "Texture from \"%s\" created: %d, %dx%d\n",
+          path.c_str(),
+          id,
+          decoder.width(),
+          decoder.height() );
 
     return true;
 }

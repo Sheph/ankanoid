@@ -15,12 +15,11 @@ void Animation::addFrame(const AnimationFrame& frame)
 {
     if (frames_.empty())
     {
-        frames_.insert(std::make_pair(frame.durationMs(), frame));
+        frames_.insert(std::make_pair(0, frame));
     }
     else
     {
-        frames_.insert(std::make_pair(
-            frames_.rbegin()->second.durationMs() + frame.durationMs(), frame));
+        frames_.insert(std::make_pair(durationMs(), frame));
     }
 }
 
@@ -29,6 +28,11 @@ void Animation::render(UInt32 timeMs, const Vector2& pos, UInt32 width, UInt32 h
     if (frames_.empty())
     {
         return;
+    }
+
+    if (loop_)
+    {
+        timeMs %= durationMs();
     }
 
     AnimationFrameMap::const_iterator it = frames_.upper_bound(timeMs);
@@ -48,7 +52,7 @@ bool Animation::finished(UInt32 timeMs) const
     }
     else
     {
-        return (timeMs > frames_.rbegin()->second.durationMs());
+        return (!loop_ && (timeMs >= durationMs()));
     }
 }
 
@@ -90,4 +94,16 @@ void Animation::renderFrame( const AnimationFrame& frame,
 
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
+}
+
+UInt32 Animation::durationMs() const
+{
+    if (frames_.empty())
+    {
+        return 0;
+    }
+    else
+    {
+        return frames_.rbegin()->first + frames_.rbegin()->second.durationMs();
+    }
 }
