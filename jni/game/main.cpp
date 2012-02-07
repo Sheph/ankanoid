@@ -18,7 +18,7 @@ extern "C"
     {
         if (gGame)
         {
-            gGame->resize(width, height);
+            gGame->init(width, height);
         }
     }
 

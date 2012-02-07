@@ -1,8 +1,9 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 
-#include <GLES/gl.h>
-#include <math.h>
+#include "Types.h"
+#include "TextureCollection.h"
+#include "Brick.h"
 
 class Game
 {
@@ -10,14 +11,19 @@ public:
     Game();
     ~Game();
 
-    void resize(GLsizei width, GLsizei height);
+    void init(UInt32 width, UInt32 height);
 
     void render();
 
 private:
-    GLsizei width_;
-    GLsizei height_;
+    TextureCollection textureCollection_;
 
+    UInt32 gameWidth_;
+    UInt32 gameHeight_;
+    UInt32 viewWidth_;
+    UInt32 viewHeight_;
+
+    Brick brick_;
 };
 
 #endif
