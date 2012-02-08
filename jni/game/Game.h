@@ -3,12 +3,13 @@
 
 #include "Types.h"
 #include "TextureCollection.h"
+#include "Sprite.h"
 #include "Brick.h"
 
 class Game
 {
 public:
-    Game();
+    Game(const std::string& apkPath);
     ~Game();
 
     void init(UInt32 width, UInt32 height);
@@ -21,6 +22,11 @@ private:
 
     static UInt64 getTimeMs();
 
+    Sprite createBackground(const Texture& texture);
+    Brick createBrick(const Texture& texture);
+
+    std::string apkPath_;
+
     TextureCollection textureCollection_;
 
     UInt32 gameWidth_;
@@ -28,6 +34,7 @@ private:
     UInt32 viewWidth_;
     UInt32 viewHeight_;
 
+    Sprite bg_;
     Brick brick_;
 
     UInt64 lastTimeMs_;

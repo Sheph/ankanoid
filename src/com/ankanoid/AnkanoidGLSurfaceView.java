@@ -9,7 +9,7 @@ class AnkanoidGLSurfaceView extends GLSurfaceView
     public AnkanoidGLSurfaceView(Context context)
     {
         super(context);
-        ankanoidRenderer = new AnkanoidRenderer();
+        ankanoidRenderer = new AnkanoidRenderer(context);
         setRenderer(ankanoidRenderer);
     }
 

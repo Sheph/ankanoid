@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "Texture.h"
+#include "zip.h"
 #include <list>
 
 class TextureCollection
@@ -11,7 +12,7 @@ public:
     TextureCollection();
     ~TextureCollection();
 
-    bool addTexture(const std::string& path, Texture& texture);
+    bool addTexture(zip* archive, const std::string& path, Texture& texture);
 
 private:
     typedef std::list<Texture> TextureList;

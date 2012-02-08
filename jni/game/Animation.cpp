@@ -70,9 +70,9 @@ void Animation::renderFrame( const AnimationFrame& frame,
     };
 
     GLfixed subTexU1 = (frame.x() * (1U << 16)) / texture_.width();
-    GLfixed subTexV1 = (frame.y() * (1U << 16)) / texture_.height();
-    GLfixed subTexU2 = ((frame.x() + frame.width()) * (1U << 16)) / texture_.width();
-    GLfixed subTexV2 = ((frame.y() + frame.height()) * (1U << 16)) / texture_.height();
+    GLfixed subTexV1 = ((texture_.height() - frame.y() - frame.height() + 1) * (1U << 16)) / texture_.height();
+    GLfixed subTexU2 = ((frame.x() + frame.width() - 1) * (1U << 16)) / texture_.width();
+    GLfixed subTexV2 = ((texture_.height() - frame.y()) * (1U << 16)) / texture_.height();
 
     GLfixed texCoords[] =
     {
@@ -84,6 +84,8 @@ void Animation::renderFrame( const AnimationFrame& frame,
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glBindTexture(GL_TEXTURE_2D, texture_.id());
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 

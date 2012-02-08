@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "PNGUtils.h"
+#include "zip.h"
 #include <fstream>
 #include <vector>
 
@@ -12,7 +13,7 @@
 class PNGDecoder
 {
 public:
-    explicit PNGDecoder(const std::string& path);
+    explicit PNGDecoder(zip* archive, const std::string& path);
     ~PNGDecoder();
 
     bool init();
@@ -29,7 +30,7 @@ private:
 
     void finish();
 
-    std::ifstream stream_;
+    zip_file* stream_;
     PNGError pngError_;
     png_structp pngPtr_;
     png_infop pngInfoPtr_;

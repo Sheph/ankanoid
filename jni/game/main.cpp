@@ -6,11 +6,17 @@ static Game* gGame = NULL;
 
 extern "C"
 {
-    JNIEXPORT void JNICALL Java_com_ankanoid_AnkanoidJNILib_init(JNIEnv* env, jobject obj)
+    JNIEXPORT void JNICALL Java_com_ankanoid_AnkanoidJNILib_init(JNIEnv* env, jobject obj, jstring apkPath)
     {
         if (!gGame)
         {
-            gGame = new Game();
+            jboolean isCopy;
+
+            const char* str = env->GetStringUTFChars(apkPath, &isCopy);
+
+            gGame = new Game(str);
+
+            env->ReleaseStringUTFChars(apkPath, str);
         }
     }
 

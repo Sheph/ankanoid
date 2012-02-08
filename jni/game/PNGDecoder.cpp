@@ -2,8 +2,8 @@
 #include "PNGSource.h"
 #include <assert.h>
 
-PNGDecoder::PNGDecoder(const std::string& path)
-: stream_(path.c_str(), std::ios_base::binary),
+PNGDecoder::PNGDecoder(zip* archive, const std::string& path)
+: stream_(archive ? zip_fopen(archive, path.c_str(), 0) : NULL),
   pngPtr_(NULL),
   pngInfoPtr_(NULL),
   width_(0),
@@ -44,7 +44,7 @@ bool PNGDecoder::init()
         return false;
     }
 
-    setPNGSource(pngPtr_, &stream_);
+    setPNGSource(pngPtr_, stream_);
 
     ::png_read_info(pngPtr_, pngInfoPtr_);
 
@@ -125,7 +125,11 @@ void PNGDecoder::finish()
             pngPtr_ = NULL;
             pngInfoPtr_ = NULL;
 
-            stream_.close();
+            if (stream_)
+            {
+                zip_fclose(stream_);
+                stream_ = NULL;
+            }
 
             return;
         }
@@ -136,5 +140,9 @@ void PNGDecoder::finish()
         pngInfoPtr_ = NULL;
     }
 
-    stream_.close();
+    if (stream_)
+    {
+        zip_fclose(stream_);
+        stream_ = NULL;
+    }
 }

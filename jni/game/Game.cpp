@@ -1,9 +1,11 @@
 #include "Game.h"
 #include "Logger.h"
+#include "ZipWrapper.h"
 #include <assert.h>
 
-Game::Game()
-: gameWidth_(320),
+Game::Game(const std::string& apkPath)
+: apkPath_(apkPath),
+  gameWidth_(320),
   gameHeight_(480),
   viewWidth_(gameWidth_),
   viewHeight_(gameHeight_),
@@ -13,6 +15,7 @@ Game::Game()
   accumTimeMs_(0),
   lastProfileReportTimeMs_(0)
 {
+    LOGI("Game::Game(%s)\n", apkPath_.c_str());
 }
 
 Game::~Game()
@@ -27,44 +30,33 @@ void Game::init(UInt32 width, UInt32 height)
     viewHeight_ = height;
 
     glViewport(0, 0, viewWidth_, viewHeight_);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrthox(0, gameWidth_, 0, gameHeight_, 0, 1);
     glMatrixMode(GL_MODELVIEW);
 
-    Sprite sprite(70, 38);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 
-    Texture texture;
+    ZipWrapper zip(apkPath_);
 
-    bool res = textureCollection_.addTexture("assets/sprites/game.png", texture);
-    assert(res);
+    if (!zip.archive())
+    {
+        LOGE("Cannot open zip file \"%s\"\n", apkPath_.c_str());
+    }
 
-    Animation defAnimation(texture, true);
+    Texture bgTexture;
+    Texture gameTexture;
 
-    defAnimation.addFrame(AnimationFrame(0,      0, 70, 38, 1000));
-    defAnimation.addFrame(AnimationFrame(70,     0, 70, 38, 250));
-    defAnimation.addFrame(AnimationFrame(70 * 2, 0, 70, 38, 250));
-    defAnimation.addFrame(AnimationFrame(70 * 3, 0, 70, 38, 250));
-    defAnimation.addFrame(AnimationFrame(70 * 2, 0, 70, 38, 250));
-    defAnimation.addFrame(AnimationFrame(70,     0, 70, 38, 250));
+    textureCollection_.addTexture(zip.archive(), "assets/sprites/background.png", bgTexture);
+    textureCollection_.addTexture(zip.archive(), "assets/sprites/game.png", gameTexture);
 
-    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
-
-    Animation dieAnimation(texture, true);
-
-    dieAnimation.addFrame(AnimationFrame(0,      70, 70, 38, 250));
-    dieAnimation.addFrame(AnimationFrame(70,     70, 70, 38, 250));
-    dieAnimation.addFrame(AnimationFrame(70 * 2, 70, 70, 38, 250));
-    dieAnimation.addFrame(AnimationFrame(70 * 3, 70, 70, 38, 250));
-    dieAnimation.addFrame(AnimationFrame(70 * 4, 70, 70, 38, 250));
-    dieAnimation.addFrame(AnimationFrame(70 * 5, 70, 70, 38, 250));
-
-    sprite.addAnimation(Brick::AnimationDie, dieAnimation);
-
-    brick_ = Brick(sprite, Vector2(0, 6), 64, 32);
-
-    brick_.sprite().startAnimation(Sprite::AnimationDefault);
+    bg_ = createBackground(bgTexture);
+    brick_ = createBrick(gameTexture);
 }
 
 void Game::render()
@@ -86,6 +78,7 @@ void Game::render()
 
     glClear(GL_COLOR_BUFFER_BIT);
 
+    bg_.render(deltaMs);
     brick_.sprite().render(deltaMs);
 
     UInt64 timeMs2 = getTimeMs();
@@ -119,4 +112,52 @@ UInt64 Game::getTimeMs()
     gettimeofday(&tv, NULL);
 
     return ((UInt64)tv.tv_sec * 1000U) + ((UInt64)tv.tv_usec / 1000U);
+}
+
+Sprite Game::createBackground(const Texture& texture)
+{
+    Sprite sprite(gameWidth_, gameHeight_);
+
+    Animation defAnimation(texture, false);
+
+    defAnimation.addFrame(AnimationFrame(0, 0, 307, 512, 0));
+
+    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
+
+    sprite.startAnimation(Sprite::AnimationDefault);
+
+    return sprite;
+}
+
+Brick Game::createBrick(const Texture& texture)
+{
+    Sprite sprite(70, 38);
+
+    Animation defAnimation(texture, true);
+
+    defAnimation.addFrame(AnimationFrame(0,      0, 70, 38, 1000));
+    defAnimation.addFrame(AnimationFrame(70,     0, 70, 38, 150));
+    defAnimation.addFrame(AnimationFrame(70 * 2, 0, 70, 38, 150));
+    defAnimation.addFrame(AnimationFrame(70 * 3, 0, 70, 38, 150));
+    defAnimation.addFrame(AnimationFrame(70 * 2, 0, 70, 38, 150));
+    defAnimation.addFrame(AnimationFrame(70,     0, 70, 38, 150));
+
+    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
+
+    Animation dieAnimation(texture, false);
+
+    dieAnimation.addFrame(AnimationFrame(0,      38, 70, 38, 150));
+    dieAnimation.addFrame(AnimationFrame(70,     38, 70, 38, 150));
+    dieAnimation.addFrame(AnimationFrame(70 * 2, 38, 70, 38, 150));
+    dieAnimation.addFrame(AnimationFrame(70 * 3, 38, 70, 38, 150));
+    dieAnimation.addFrame(AnimationFrame(70 * 4, 38, 70, 38, 150));
+    dieAnimation.addFrame(AnimationFrame(70 * 5, 38, 70, 38, 150));
+
+    sprite.addAnimation(Brick::AnimationDie, dieAnimation);
+
+    Brick brick(sprite, Vector2(0, 6), 64, 32);
+
+    brick.sprite().startAnimation(Sprite::AnimationDefault);
+
+    return brick;
 }

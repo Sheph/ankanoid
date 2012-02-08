@@ -12,9 +12,9 @@ TextureCollection::~TextureCollection()
     unloadAllTextures();
 }
 
-bool TextureCollection::addTexture(const std::string& path, Texture& texture)
+bool TextureCollection::addTexture(zip* archive, const std::string& path, Texture& texture)
 {
-    PNGDecoder decoder(path);
+    PNGDecoder decoder(archive, path);
 
     if (!decoder.init())
     {
@@ -38,6 +38,7 @@ bool TextureCollection::addTexture(const std::string& path, Texture& texture)
     glBindTexture(GL_TEXTURE_2D, id);
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, decoder.width(), decoder.height(), 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, (GLvoid*)&data[0] );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     if (glGetError() != GL_NO_ERROR)
     {
