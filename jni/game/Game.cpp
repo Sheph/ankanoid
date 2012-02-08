@@ -5,8 +5,8 @@
 
 Game::Game(const std::string& apkPath)
 : apkPath_(apkPath),
-  gameWidth_(320),
-  gameHeight_(480),
+  gameWidth_(480),
+  gameHeight_(800),
   viewWidth_(gameWidth_),
   viewHeight_(gameHeight_),
   lastTimeMs_(0),
@@ -30,10 +30,10 @@ void Game::init(UInt32 width, UInt32 height)
     viewHeight_ = height;
 
     glViewport(0, 0, viewWidth_, viewHeight_);
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrthox(0, gameWidth_, 0, gameHeight_, 0, 1);
+    glOrthox(0, (gameWidth_ - 1), 0, (gameHeight_ - 1), 0, 1);
     glMatrixMode(GL_MODELVIEW);
 
     glEnable(GL_BLEND);
@@ -78,8 +78,10 @@ void Game::render()
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    bg_.render(deltaMs);
-    brick_.sprite().render(deltaMs);
+    brick_.sprite().setPos(Vector2(10, 10));
+
+    bg_.render(deltaMs, true);
+    brick_.render(deltaMs, true);
 
     UInt64 timeMs2 = getTimeMs();
 
@@ -114,19 +116,27 @@ UInt64 Game::getTimeMs()
     return ((UInt64)tv.tv_sec * 1000U) + ((UInt64)tv.tv_usec / 1000U);
 }
 
-Sprite Game::createBackground(const Texture& texture)
+Background Game::createBackground(const Texture& texture)
 {
+    static const UInt32 bgTexWidth = 257;
+    static const UInt32 bgTexHeight = 512;
+
     Sprite sprite(gameWidth_, gameHeight_);
 
     Animation defAnimation(texture, false);
 
-    defAnimation.addFrame(AnimationFrame(0, 0, 307, 512, 0));
+    defAnimation.addFrame(AnimationFrame(0, 0, bgTexWidth, bgTexHeight, 0));
 
     sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
 
-    sprite.startAnimation(Sprite::AnimationDefault);
+    Background background(
+        sprite,
+        (26 * gameWidth_) / bgTexWidth,
+        ((bgTexWidth - 26) * gameWidth_) / bgTexWidth );
 
-    return sprite;
+    background.sprite().startAnimation(Sprite::AnimationDefault);
+
+    return background;
 }
 
 Brick Game::createBrick(const Texture& texture)

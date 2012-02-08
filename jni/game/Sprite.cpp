@@ -1,4 +1,5 @@
 #include "Sprite.h"
+#include "Utils.h"
 #include <assert.h>
 
 Sprite::Sprite()
@@ -28,7 +29,7 @@ void Sprite::addAnimation(int id, const Animation& animation)
     assert(res);
 }
 
-void Sprite::render(UInt32 deltaMs)
+void Sprite::render(UInt32 deltaMs, bool debug)
 {
     AnimationMap::const_iterator it = animations_.find(curAnimationId_);
 
@@ -40,6 +41,11 @@ void Sprite::render(UInt32 deltaMs)
     curAnimationTimeMs_ += deltaMs;
 
     it->second.render(curAnimationTimeMs_, pos_, width_, height_);
+
+    if (debug)
+    {
+        drawDebugRectangle(pos_, width_, height_, true);
+    }
 }
 
 void Sprite::startAnimation(int id)

@@ -34,6 +34,8 @@ public:
     {
     }
 
+    void render(UInt32 deltaMs, bool debug = false);
+
     inline Sprite& sprite() { return sprite_; }
 
     inline const Vector2& boundOffset() const { return boundOffset_; }

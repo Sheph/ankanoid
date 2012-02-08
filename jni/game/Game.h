@@ -3,7 +3,7 @@
 
 #include "Types.h"
 #include "TextureCollection.h"
-#include "Sprite.h"
+#include "Background.h"
 #include "Brick.h"
 
 class Game
@@ -22,7 +22,7 @@ private:
 
     static UInt64 getTimeMs();
 
-    Sprite createBackground(const Texture& texture);
+    Background createBackground(const Texture& texture);
     Brick createBrick(const Texture& texture);
 
     std::string apkPath_;
@@ -34,7 +34,7 @@ private:
     UInt32 viewWidth_;
     UInt32 viewHeight_;
 
-    Sprite bg_;
+    Background bg_;
     Brick brick_;
 
     UInt64 lastTimeMs_;

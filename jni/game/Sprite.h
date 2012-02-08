@@ -21,7 +21,7 @@ public:
 
     void addAnimation(int id, const Animation& animation);
 
-    void render(UInt32 deltaMs);
+    void render(UInt32 deltaMs, bool debug = false);
 
     void startAnimation(int id);
 
@@ -29,6 +29,10 @@ public:
 
     const Vector2& pos() const { return pos_; }
     void setPos(const Vector2& pos) { pos_ = pos; }
+
+    inline UInt32 width() const { return width_; }
+
+    inline UInt32 height() const { return height_; }
 
 private:
     typedef std::map<int, Animation> AnimationMap;
