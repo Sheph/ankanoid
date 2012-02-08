@@ -98,7 +98,7 @@ public:
         return mag;
     }
 
-    float dot(const Vector2& other)
+    float dot(const Vector2& other) const
     {
         return (x_ * other.x_) + (y_ * other.y_);
     }
@@ -106,6 +106,8 @@ public:
     void clockwiseRotate(float deg);
 
     Vector2 clockwiseNormal() const;
+
+    Vector2 reflect(const Vector2& other) const;
 
     inline float x() const { return x_; }
 
