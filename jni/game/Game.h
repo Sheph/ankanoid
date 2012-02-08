@@ -28,6 +28,12 @@ private:
     Paddle createPaddle(const Texture& texture);
     Ball createBall(const Texture& texture);
 
+    void resetLevel();
+
+    void putBallOnPaddle();
+
+    bool debug_;
+
     std::string apkPath_;
 
     TextureCollection textureCollection_;

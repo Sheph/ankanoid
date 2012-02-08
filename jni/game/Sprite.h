@@ -27,8 +27,7 @@ public:
 
     bool animationFinished() const;
 
-    const Vector2& pos() const { return pos_; }
-    void setPos(const Vector2& pos) { pos_ = pos; }
+    inline Vector2& pos() { return pos_; }
 
     inline UInt32 width() const { return width_; }
 

@@ -9,16 +9,11 @@ class Ball
 {
 public:
     Ball()
-    : radius_(0)
     {
     }
 
-    Ball( const Sprite& sprite,
-          const Vector2& center,
-          UInt32 radius )
-    : sprite_(sprite),
-      center_(center),
-      radius_(radius)
+    explicit Ball(const Sprite& sprite)
+    : sprite_(sprite)
     {
     }
 
@@ -30,14 +25,11 @@ public:
 
     inline Sprite& sprite() { return sprite_; }
 
-    inline const Vector2& center() const { return center_; }
-
-    inline UInt32 radius() const { return radius_; }
+    inline Vector2& speed() { return speed_; }
 
 private:
     Sprite sprite_;
-    Vector2 center_;
-    UInt32 radius_;
+    Vector2 speed_;
 };
 
 #endif

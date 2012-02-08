@@ -1,10 +1,12 @@
 #include "Game.h"
 #include "Logger.h"
 #include "ZipWrapper.h"
+#include <stdlib.h>
 #include <assert.h>
 
 Game::Game(const std::string& apkPath)
-: apkPath_(apkPath),
+: debug_(false),
+  apkPath_(apkPath),
   gameWidth_(480),
   gameHeight_(800),
   viewWidth_(gameWidth_),
@@ -59,6 +61,8 @@ void Game::init(UInt32 width, UInt32 height)
     brick_ = createBrick(gameTexture);
     paddle_ = createPaddle(gameTexture);
     ball_ = createBall(gameTexture);
+
+    resetLevel();
 }
 
 void Game::render()
@@ -80,14 +84,10 @@ void Game::render()
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    brick_.sprite().setPos(Vector2(10, 10));
-    paddle_.sprite().setPos(Vector2(100, 100));
-    ball_.sprite().setPos(Vector2(50, 50));
-
-    bg_.render(deltaMs, true);
-    brick_.render(deltaMs, true);
-    paddle_.render(deltaMs, true);
-    ball_.render(deltaMs, true);
+    bg_.render(deltaMs, debug_);
+    brick_.render(deltaMs, debug_);
+    paddle_.render(deltaMs, debug_);
+    ball_.render(deltaMs, debug_);
 
     UInt64 timeMs2 = getTimeMs();
 
@@ -205,9 +205,41 @@ Ball Game::createBall(const Texture& texture)
 
     sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
 
-    Ball ball(sprite, Vector2(12, 12), 12);
+    Ball ball(sprite);
 
     ball.sprite().startAnimation(Sprite::AnimationDefault);
 
     return ball;
+}
+
+void Game::resetLevel()
+{
+    srand(time(NULL));
+
+    UInt32 brickX =
+        bg_.left() + (rand() % (bg_.right() - bg_.left() - brick_.sprite().width()));
+    UInt32 brickY =
+        300 + (rand() % (gameHeight_ - brick_.sprite().height() - 300));
+
+    brick_.sprite().pos() = Vector2(brickX, brickY);
+
+    UInt32 paddleX = (bg_.left() + bg_.right()) / 2 - (paddle_.sprite().width() / 2);
+    UInt32 paddleY = 100;
+
+    paddle_.sprite().pos() = Vector2(paddleX, paddleY);
+    paddle_.speed() = Vector2(0, 0);
+
+    putBallOnPaddle();
+
+    ball_.speed() = Vector2(0, 0);
+}
+
+void Game::putBallOnPaddle()
+{
+    Vector2 pos = paddle_.sprite().pos() + paddle_.boundOffset();
+
+    UInt32 ballX = pos.x() + paddle_.boundWidth() / 2 - ball_.sprite().width() / 2;
+    UInt32 ballY = pos.y() + paddle_.boundHeight();
+
+    ball_.sprite().pos() = Vector2(ballX, ballY);
 }

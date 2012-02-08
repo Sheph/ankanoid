@@ -39,11 +39,15 @@ public:
 
     inline UInt32 boundHeight() const { return boundHeight_; }
 
+    inline Vector2& speed() { return speed_; }
+
 private:
     Sprite sprite_;
     Vector2 boundOffset_;
     UInt32 boundWidth_;
     UInt32 boundHeight_;
+    Vector2 speed_;
+
 };
 
 #endif
