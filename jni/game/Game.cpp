@@ -57,6 +57,8 @@ void Game::init(UInt32 width, UInt32 height)
 
     bg_ = createBackground(bgTexture);
     brick_ = createBrick(gameTexture);
+    paddle_ = createPaddle(gameTexture);
+    ball_ = createBall(gameTexture);
 }
 
 void Game::render()
@@ -79,9 +81,13 @@ void Game::render()
     glClear(GL_COLOR_BUFFER_BIT);
 
     brick_.sprite().setPos(Vector2(10, 10));
+    paddle_.sprite().setPos(Vector2(100, 100));
+    ball_.sprite().setPos(Vector2(50, 50));
 
     bg_.render(deltaMs, true);
     brick_.render(deltaMs, true);
+    paddle_.render(deltaMs, true);
+    ball_.render(deltaMs, true);
 
     UInt64 timeMs2 = getTimeMs();
 
@@ -170,4 +176,38 @@ Brick Game::createBrick(const Texture& texture)
     brick.sprite().startAnimation(Sprite::AnimationDefault);
 
     return brick;
+}
+
+Paddle Game::createPaddle(const Texture& texture)
+{
+    Sprite sprite(100, 30);
+
+    Animation defAnimation(texture, false);
+
+    defAnimation.addFrame(AnimationFrame(0, 76, 100, 30, 0));
+
+    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
+
+    Paddle paddle(sprite, Vector2(0, 6), 95, 24);
+
+    paddle.sprite().startAnimation(Sprite::AnimationDefault);
+
+    return paddle;
+}
+
+Ball Game::createBall(const Texture& texture)
+{
+    Sprite sprite(24, 24);
+
+    Animation defAnimation(texture, false);
+
+    defAnimation.addFrame(AnimationFrame(0, 106, 16, 16, 0));
+
+    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
+
+    Ball ball(sprite, Vector2(12, 12), 12);
+
+    ball.sprite().startAnimation(Sprite::AnimationDefault);
+
+    return ball;
 }

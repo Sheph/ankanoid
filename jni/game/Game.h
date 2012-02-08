@@ -5,6 +5,8 @@
 #include "TextureCollection.h"
 #include "Background.h"
 #include "Brick.h"
+#include "Paddle.h"
+#include "Ball.h"
 
 class Game
 {
@@ -18,12 +20,13 @@ public:
 
 private:
     static const UInt32 profileReportTimeoutMs_ = 3000;
-    static const UInt32 maxFPS_ = 60;
 
     static UInt64 getTimeMs();
 
     Background createBackground(const Texture& texture);
     Brick createBrick(const Texture& texture);
+    Paddle createPaddle(const Texture& texture);
+    Ball createBall(const Texture& texture);
 
     std::string apkPath_;
 
@@ -36,6 +39,8 @@ private:
 
     Background bg_;
     Brick brick_;
+    Paddle paddle_;
+    Ball ball_;
 
     UInt64 lastTimeMs_;
     UInt32 numFrames_;

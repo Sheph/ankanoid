@@ -17,7 +17,9 @@ LOCAL_SRC_FILES := \
     Sprite.cpp \
     Background.cpp \
     Utils.cpp \
-    Brick.cpp
+    Brick.cpp \
+    Paddle.cpp \
+    Ball.cpp
 LOCAL_LDLIBS := -llog -lGLESv1_CM
 
 include $(BUILD_SHARED_LIBRARY)
