@@ -14,10 +14,11 @@ class AnkanoidGLSurfaceView extends GLSurfaceView
     }
 
     public boolean onTouchEvent(final MotionEvent event)
-    {
-        if (event.getAction() == MotionEvent.ACTION_DOWN)
-        {            
-        }
+    {   
+    	AnkanoidJNILib.input(
+			(int)event.getRawX(),
+			(int)event.getRawY(),
+			(event.getAction() == MotionEvent.ACTION_UP) );    	     
         return true;
     }
 

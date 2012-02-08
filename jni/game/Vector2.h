@@ -2,6 +2,7 @@
 #define _VECTOR2_H_
 
 #include "Types.h"
+#include <math.h>
 
 class Vector2
 {
@@ -34,6 +35,14 @@ public:
         return *this;
     }
 
+    Vector2& operator*=(float mag)
+    {
+        x_ *= mag;
+        y_ *= mag;
+
+        return *this;
+    }
+
     Vector2 operator+(const Vector2& other) const
     {
         Vector2 tmp = *this;
@@ -52,14 +61,52 @@ public:
         return tmp;
     }
 
+    Vector2 operator*(float mag) const
+    {
+        Vector2 tmp = *this;
+
+        tmp *= mag;
+
+        return tmp;
+    }
+
     Vector2 operator-() const
     {
         return Vector2(-x_, -y_);
     }
 
-    float x() const { return x_; }
+    float length() const
+    {
+        return sqrt(length2());
+    }
 
-    float y() const { return y_; }
+    float length2() const
+    {
+        return (x_ * x_) + (y_ * y_);
+    }
+
+    float normalize()
+    {
+        float mag = length();
+
+        if (mag != 0.0f)
+        {
+            x_ /= mag;
+            y_ /= mag;
+        }
+
+        return mag;
+    }
+
+    void rotateClockwise(float deg);
+
+    inline float x() const { return x_; }
+
+    inline float y() const { return y_; }
+
+    inline void setX(float x) { x_ = x; }
+
+    inline void setY(float y) { y_ = y; }
 
 private:
     float x_;

@@ -33,6 +33,8 @@ public:
 
     inline Sprite& sprite() { return sprite_; }
 
+    inline const Sprite& sprite() const { return sprite_; }
+
     inline const Vector2& boundOffset() const { return boundOffset_; }
 
     inline UInt32 boundWidth() const { return boundWidth_; }
@@ -40,6 +42,10 @@ public:
     inline UInt32 boundHeight() const { return boundHeight_; }
 
     inline Vector2& speed() { return speed_; }
+
+    Vector2 boundAbsPos() const;
+
+    Vector2 boundAbsCenter() const;
 
 private:
     Sprite sprite_;

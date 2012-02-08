@@ -11,6 +11,9 @@ Game::Game(const std::string& apkPath)
   gameHeight_(800),
   viewWidth_(gameWidth_),
   viewHeight_(gameHeight_),
+  lastXInput_(0),
+  ballReleasePressed_(false),
+  ballReleased_(false),
   lastTimeMs_(0),
   numFrames_(0),
   accumRenderTimeMs_(0),
@@ -65,6 +68,20 @@ void Game::init(UInt32 width, UInt32 height)
     resetLevel();
 }
 
+void Game::input(UInt32 viewX, UInt32 viewY, bool up)
+{
+    UInt32 x = viewX, y = viewY;
+
+    viewXYToGameXY(x, y);
+
+    lastXInput_ = x;
+
+    if (up)
+    {
+        ballReleasePressed_ = true;
+    }
+}
+
 void Game::render()
 {
     UInt64 timeMs = getTimeMs();
@@ -81,6 +98,18 @@ void Game::render()
     }
 
     lastTimeMs_ = timeMs;
+
+    /*
+     * Update stuff
+     */
+
+    updatePaddle(deltaMs);
+
+    updateBall(deltaMs);
+
+    /*
+     * Draw stuff
+     */
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -229,17 +258,104 @@ void Game::resetLevel()
     paddle_.sprite().pos() = Vector2(paddleX, paddleY);
     paddle_.speed() = Vector2(0, 0);
 
+    lastXInput_ = paddle_.boundAbsCenter().x();
+
     putBallOnPaddle();
 
     ball_.speed() = Vector2(0, 0);
+
+    ballReleasePressed_ = false;
+    ballReleased_ = false;
 }
 
 void Game::putBallOnPaddle()
 {
-    Vector2 pos = paddle_.sprite().pos() + paddle_.boundOffset();
+    Vector2 pos = paddle_.boundAbsPos();
 
     UInt32 ballX = pos.x() + paddle_.boundWidth() / 2 - ball_.sprite().width() / 2;
     UInt32 ballY = pos.y() + paddle_.boundHeight();
 
     ball_.sprite().pos() = Vector2(ballX, ballY);
+}
+
+void Game::viewXYToGameXY(UInt32& x, UInt32& y)
+{
+    x = (gameWidth_ * x) / viewWidth_;
+    y = gameHeight_ - ((gameHeight_ * y) / viewHeight_);
+}
+
+void Game::updatePaddle(UInt32 deltaMs)
+{
+    float deltaS = ((float)deltaMs / 1000.0f);
+
+    Vector2 boundCenter = paddle_.boundAbsCenter();
+
+    /*
+     * Make paddle "run to" last press position
+     */
+
+    if ((UInt32)boundCenter.x() == lastXInput_)
+    {
+        return;
+    }
+    else if ((UInt32)boundCenter.x() > lastXInput_)
+    {
+        paddle_.speed() = Vector2(-paddleSpeed_, 0);
+    }
+    else
+    {
+        paddle_.speed() = Vector2(paddleSpeed_, 0);
+    }
+
+    Vector2 newCenter = boundCenter + (paddle_.speed() * deltaS);
+
+    if ( (newCenter.x() > lastXInput_) && (paddle_.speed().x() > 0) )
+    {
+        newCenter.setX(lastXInput_);
+    }
+    else if ( (newCenter.x() < lastXInput_) && (paddle_.speed().x() < 0) )
+    {
+        newCenter.setX(lastXInput_);
+    }
+
+    paddle_.sprite().pos() += (newCenter - boundCenter);
+
+    /*
+     * Constraint game area
+     */
+
+    if (paddle_.sprite().pos().x() < bg_.left())
+    {
+        paddle_.sprite().pos().setX(bg_.left());
+    }
+
+    if (paddle_.sprite().pos().x() + paddle_.sprite().width() > bg_.right())
+    {
+        paddle_.sprite().pos().setX(bg_.right() - paddle_.sprite().width());
+    }
+}
+
+void Game::updateBall(UInt32 deltaMs)
+{
+    float deltaS = ((float)deltaMs / 1000.0f);
+
+    if (!ballReleasePressed_)
+    {
+        putBallOnPaddle();
+
+        return;
+    }
+
+    if (!ballReleased_)
+    {
+        ballReleased_ = true;
+
+        Vector2 speed(0, ballSpeed_);
+
+        speed.rotateClockwise(ballReleaseAngleDeg_);
+
+        ball_.speed() = speed;
+    }
+
+    ball_.sprite().pos() += ball_.speed() * deltaS;
 }

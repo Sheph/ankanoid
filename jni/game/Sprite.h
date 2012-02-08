@@ -29,6 +29,8 @@ public:
 
     inline Vector2& pos() { return pos_; }
 
+    inline const Vector2& pos() const { return pos_; }
+
     inline UInt32 width() const { return width_; }
 
     inline UInt32 height() const { return height_; }

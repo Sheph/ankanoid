@@ -35,4 +35,12 @@ extern "C"
             gGame->render();
         }
     }
+
+    JNIEXPORT void JNICALL Java_com_ankanoid_AnkanoidJNILib_input(JNIEnv* env, jobject obj, jint x, jint y, jboolean up)
+    {
+        if (gGame)
+        {
+            gGame->input(x, y, up);
+        }
+    }
 };

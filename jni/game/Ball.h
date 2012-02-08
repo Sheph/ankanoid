@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "Sprite.h"
 #include "Vector2.h"
+#include <assert.h>
 
 class Ball
 {
@@ -15,6 +16,10 @@ public:
     explicit Ball(const Sprite& sprite)
     : sprite_(sprite)
     {
+        /*
+         * A dirty hack.
+         */
+        assert(sprite_.width() == sprite_.height());
     }
 
     ~Ball()

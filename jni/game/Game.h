@@ -16,10 +16,15 @@ public:
 
     void init(UInt32 width, UInt32 height);
 
+    void input(UInt32 viewX, UInt32 viewY, bool up);
+
     void render();
 
 private:
     static const UInt32 profileReportTimeoutMs_ = 3000;
+    static const float paddleSpeed_ = 600;
+    static const float ballSpeed_ = 400;
+    static const float ballReleaseAngleDeg_ = 15;
 
     static UInt64 getTimeMs();
 
@@ -31,6 +36,12 @@ private:
     void resetLevel();
 
     void putBallOnPaddle();
+
+    void viewXYToGameXY(UInt32& x, UInt32& y);
+
+    void updatePaddle(UInt32 deltaMs);
+
+    void updateBall(UInt32 deltaMs);
 
     bool debug_;
 
@@ -47,6 +58,9 @@ private:
     Brick brick_;
     Paddle paddle_;
     Ball ball_;
+    UInt32 lastXInput_;
+    bool ballReleasePressed_;
+    bool ballReleased_;
 
     UInt64 lastTimeMs_;
     UInt32 numFrames_;
