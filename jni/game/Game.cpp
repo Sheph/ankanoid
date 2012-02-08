@@ -352,7 +352,7 @@ void Game::updateBall(UInt32 deltaMs)
 
         Vector2 speed(0, ballSpeed_);
 
-        speed.rotateClockwise(ballReleaseAngleDeg_);
+        speed.clockwiseRotate(ballReleaseAngleDeg_);
 
         ball_.speed() = speed;
     }
