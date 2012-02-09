@@ -10,7 +10,7 @@ class SPCountedBase
 {
 public:
     SPCountedBase()
-    : m_use_count(1)
+    : useCount_(1)
     {
     }
 
@@ -22,12 +22,12 @@ public:
 
     void addRef()
     {
-        ++m_use_count;
+        ++useCount_;
     }
 
     void release()
     {
-        if (--m_use_count == 0)
+        if (--useCount_ == 0)
         {
             dispose();
             delete this;
@@ -38,14 +38,14 @@ private:
     SPCountedBase(const SPCountedBase& other);
     SPCountedBase& operator=(const SPCountedBase& other);
 
-    volatile long m_use_count;
+    volatile long useCount_;
 };
 
 template <class X>
 class SPCountedImpl : public SPCountedBase
 {
 public:
-    explicit SPCountedImpl(X* px) : m_px(px)
+    explicit SPCountedImpl(X* px) : px_(px)
     {
     }
 
@@ -53,11 +53,11 @@ public:
     {
         typedef char type_must_be_complete[sizeof(X) ? 1 : -1];
         (void) sizeof(type_must_be_complete);
-        delete m_px;
+        delete px_;
     }
 
 private:
-    X* m_px;
+    X* px_;
 };
 
 template <class T>
@@ -67,7 +67,7 @@ public:
     typedef T ValueType;
 
     SharedPtr()
-    : m_px(0), m_pn(0)
+    : px_(0), pn_(0)
     {
     }
 
@@ -76,50 +76,50 @@ public:
     {
         if (p == 0)
         {
-            m_pn = 0;
-            m_px = 0;
+            pn_ = 0;
+            px_ = 0;
         }
         else
         {
-            m_pn = new ::SPCountedImpl<Y>(p);
-            if (m_pn)
+            pn_ = new ::SPCountedImpl<Y>(p);
+            if (pn_)
             {
-                m_px = p;
+                px_ = p;
             }
             else
             {
                 typedef char type_must_be_complete[sizeof(T) ? 1 : -1];
                 (void) sizeof(type_must_be_complete);
                 delete p;
-                m_px = 0;
+                px_ = 0;
             }
         }
     }
 
     SharedPtr(const SharedPtr& other)
-    : m_px(other.m_px), m_pn(other.m_pn)
+    : px_(other.px_), pn_(other.pn_)
     {
-        if (m_pn != 0)
+        if (pn_ != 0)
         {
-            m_pn->addRef();
+            pn_->addRef();
         }
     }
 
     template <class Y>
     SharedPtr(const SharedPtr<Y>& other)
-    : m_px(other.m_px), m_pn(other.m_pn)
+    : px_(other.px_), pn_(other.pn_)
     {
-        if (m_pn != 0)
+        if (pn_ != 0)
         {
-            m_pn->addRef();
+            pn_->addRef();
         }
     }
 
     ~SharedPtr()
     {
-        if (m_pn != 0)
+        if (pn_ != 0)
         {
-            m_pn->release();
+            pn_->release();
         }
     }
 
@@ -144,25 +144,25 @@ public:
     template <class Y>
     void reset(Y* p)
     {
-        assert(p == 0 || p != m_px);
+        assert(p == 0 || p != px_);
         ThisType(p).swap(*this);
     }
 
     T& operator*() const
     {
-        assert(m_px != 0);
-        return *m_px;
+        assert(px_ != 0);
+        return *px_;
     }
 
     T* operator->() const
     {
-        assert(m_px != 0);
-        return m_px;
+        assert(px_ != 0);
+        return px_;
     }
 
     T* get() const
     {
-        return m_px;
+        return px_;
     }
 
     typedef void (*unspecified_bool_type)();
@@ -170,18 +170,18 @@ public:
 
     operator unspecified_bool_type() const
     {
-        return (m_px == 0) ? 0 : unspecified_bool_true;
+        return (px_ == 0) ? 0 : unspecified_bool_true;
     }
 
     bool operator!() const
     {
-        return (m_px == 0);
+        return (px_ == 0);
     }
 
     void swap(SharedPtr& other)
     {
-        std::swap(m_px, other.m_px);
-        std::swap(m_pn, other.m_pn);
+        std::swap(px_, other.px_);
+        std::swap(pn_, other.pn_);
     }
 
 private:
@@ -190,8 +190,8 @@ private:
 
     typedef SharedPtr<T> ThisType;
 
-    T* m_px;
-    ::SPCountedBase* m_pn;
+    T* px_;
+    ::SPCountedBase* pn_;
 };
 
 template <class T, class U>
