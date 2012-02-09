@@ -115,15 +115,83 @@ namespace
         Vector2 p2_;
         bool& touched_;
     };
+
+    class PaddleCollisionDetector : public CollisionDetector
+    {
+    public:
+        PaddleCollisionDetector(const Vector2& p1, const Vector2& p2)
+        : p1_(p1),
+          p2_(p2)
+        {
+        }
+
+        ~PaddleCollisionDetector()
+        {
+        }
+
+        virtual bool detect( const Vector2& c1,
+                             const Vector2& c2,
+                             float radius,
+                             Vector2& newC )
+        {
+            return detectLineSegmentCircleCollision( p1_,
+                                                     p2_,
+                                                     c1,
+                                                     c2,
+                                                     radius,
+                                                     newC );
+        }
+
+        virtual Vector2 resolve( const Vector2& c1,
+                                 const Vector2& c2,
+                                 const Vector2& newC,
+                                 Vector2& normalizedDirection )
+        {
+            Vector2 tmp = generateLineCircleCollisionResponse( p1_,
+                                                               p2_,
+                                                               c1,
+                                                               c2,
+                                                               newC,
+                                                               normalizedDirection );
+
+            Vector2 paddle = (p2_ - p1_);
+
+            Vector2 paddleNormalized = paddle;
+            paddleNormalized.normalize();
+
+            float newCProjLength = (newC - p1_).dot(paddleNormalized);
+            float paddleLength = paddle.length();
+            float paddleLength2 = (paddleLength / 2);
+
+            if (newCProjLength < 0.0f)
+            {
+                newCProjLength = 0.0f;
+            }
+
+            if (newCProjLength > paddleLength)
+            {
+                newCProjLength = paddleLength;
+            }
+
+            float deg = ((paddleLength2 - newCProjLength) * Game::paddleMaxAngleDeg_) / paddleLength2;
+
+            normalizedDirection = paddleNormalized.clockwiseNormal();
+            normalizedDirection.clockwiseRotate(deg);
+
+            return newC + normalizedDirection * (tmp - newC).length();
+        }
+
+    private:
+        Vector2 p1_;
+        Vector2 p2_;
+    };
 }
 
 Game::Game(const std::string& apkPath)
-: debug_(true),
+: debug_(false),
   apkPath_(apkPath),
   gameWidth_(480),
   gameHeight_(800),
-//  gameWidth_(120),
-//  gameHeight_(220),
   viewWidth_(gameWidth_),
   viewHeight_(gameHeight_),
   lastXInput_(0),
@@ -195,9 +263,6 @@ void Game::input(UInt32 viewX, UInt32 viewY, bool up)
     {
         ballReleasePressed_ = true;
     }
-
-    brick_.sprite().pos().setX(x);
-    brick_.sprite().pos().setY(y);
 }
 
 void Game::render()
@@ -492,7 +557,6 @@ void Game::updateBall(UInt32 deltaMs)
         WallCollisionDetector rightWallDetector(Vector2(bg_.right(), 1), Vector2(bg_.right(), 0));
         WallCollisionDetector leftWallDetector(Vector2(bg_.left(), 0), Vector2(bg_.left(), 1));
         WallCollisionDetector topWallDetector(Vector2(0, gameHeight_), Vector2(1, gameHeight_));
-        WallCollisionDetector bottomWallDetector(Vector2(1, 0), Vector2(0, 0));
 
         Vector2 brickBoundPos = brick_.boundAbsPos();
 
@@ -513,24 +577,39 @@ void Game::updateBall(UInt32 deltaMs)
             Vector2(brickBoundPos.x(), brickBoundPos.y() + brick_.boundHeight()),
             brickTouched );
 
+        Vector2 paddleBoundPos = paddle_.boundAbsPos();
+
+        PaddleCollisionDetector paddleDetector(
+            Vector2(paddleBoundPos.x() + paddle_.boundWidth(), paddleBoundPos.y() + paddle_.boundHeight()),
+            Vector2(paddleBoundPos.x(), paddleBoundPos.y() + paddle_.boundHeight()) );
+
         std::vector<CollisionDetector*> collisionDetectors;
 
         collisionDetectors.push_back(&rightWallDetector);
         collisionDetectors.push_back(&leftWallDetector);
         collisionDetectors.push_back(&topWallDetector);
-        collisionDetectors.push_back(&bottomWallDetector);
 
         if (brick_.isAlive())
         {
+            /*
+             * Brick is only taking place in collisions while it's alive.
+             */
+
             collisionDetectors.push_back(&leftBrickSideDetector);
             collisionDetectors.push_back(&bottomBrickSideDetector);
             collisionDetectors.push_back(&rightBrickSideDetector);
             collisionDetectors.push_back(&topBrickSideDetector);
         }
 
+        collisionDetectors.push_back(&paddleDetector);
+
         Vector2 initialNormalizedDirection = (c2 - c1);
 
         initialNormalizedDirection.normalize();
+
+        /*
+         * Find closest collision.
+         */
 
         Vector2 newC;
         CollisionDetector* found = NULL;
@@ -568,8 +647,16 @@ void Game::updateBall(UInt32 deltaMs)
 
         if (!found)
         {
+            /*
+             * No collisions, we're done.
+             */
+
             break;
         }
+
+        /*
+         * Resolve this collision.
+         */
 
         c2 = found->resolve( c1,
                              c2,
@@ -578,12 +665,26 @@ void Game::updateBall(UInt32 deltaMs)
 
         c1 = newC;
 
+        if (brickTouched)
+        {
+            /*
+             * Kill brick.
+             */
+
+            brick_.setAlive(false);
+            brick_.sprite().startAnimation(Brick::AnimationDie);
+        }
+
         if (++i >= 3)
         {
             LOGI("Unable to resolve collisions\n");
             break;
         }
     }
+
+    /*
+     * Update ball position.
+     */
 
     ball_.setCenter(c2);
     ball_.speed() = normalizedSpeed * ball_.speed().length();

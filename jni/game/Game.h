@@ -21,16 +21,13 @@ public:
 
     void render();
 
-private:
     static const UInt32 profileReportTimeoutMs_ = 5000;
-    //static const float paddleSpeed_ = 600;
-    //static const float ballSpeed_ = 400;
-    //static const float ballReleaseAngleDeg_ = 15;
-
-    static const float paddleSpeed_ = 600;
-    static const float ballSpeed_ = 500;
+    static const float paddleSpeed_ = 400;
+    static const float ballSpeed_ = 650;
     static const float ballReleaseAngleDeg_ = 15;
+    static const float paddleMaxAngleDeg_ = 60;
 
+private:
     static UInt64 getTimeMs();
 
     Background createBackground(const Texture& texture);
