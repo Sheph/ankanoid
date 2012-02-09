@@ -8,7 +8,7 @@
 #include <vector>
 
 /*
- * RGBA8-no-interlace PNG decoder, if PNG files is not RGBA8-no-interlace then 'init' will return false.
+ * RGBA8-no-interlace PNG decoder, if PNG file is not RGBA8-no-interlace then 'init' will return false.
  */
 class PNGDecoder
 {
