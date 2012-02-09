@@ -247,6 +247,14 @@ void Game::init(UInt32 width, UInt32 height)
     brick_ = createBrick(gameTexture);
     paddle_ = createPaddle(gameTexture);
     ball_ = createBall(gameTexture);
+    wonBanner_ = createWonBanner(gameTexture);
+    lostBanner_ = createLostBanner(gameTexture);
+
+    wonBanner_.pos() = Vector2( gameWidth_ / 2 - (wonBanner_.width() / 2),
+                                gameHeight_ / 2 - (wonBanner_.height() / 2) );
+
+    lostBanner_.pos() = Vector2( gameWidth_ / 2 - (lostBanner_.width() / 2),
+                                 gameHeight_ / 2 - (lostBanner_.height() / 2) );
 
     resetLevel();
 }
@@ -290,6 +298,8 @@ void Game::render()
 
     updateBall(deltaMs);
 
+    updateStatus(deltaMs);
+
     /*
      * Draw stuff
      */
@@ -300,6 +310,8 @@ void Game::render()
     brick_.render(deltaMs, debug_);
     paddle_.render(deltaMs, debug_);
     ball_.render(deltaMs, debug_);
+    wonBanner_.render(deltaMs, debug_);
+    lostBanner_.render(deltaMs, debug_);
 
     UInt64 timeMs2 = getTimeMs();
 
@@ -424,6 +436,32 @@ Ball Game::createBall(const Texture& texture)
     return ball;
 }
 
+Sprite Game::createWonBanner(const Texture& texture)
+{
+    Sprite sprite(128, 128);
+
+    Animation defAnimation(texture, false);
+
+    defAnimation.addFrame(AnimationFrame(0, 122, 128, 128, 2000));
+
+    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
+
+    return sprite;
+}
+
+Sprite Game::createLostBanner(const Texture& texture)
+{
+    Sprite sprite(128, 128);
+
+    Animation defAnimation(texture, false);
+
+    defAnimation.addFrame(AnimationFrame(0, 250, 128, 128, 2000));
+
+    sprite.addAnimation(Sprite::AnimationDefault, defAnimation);
+
+    return sprite;
+}
+
 void Game::resetLevel()
 {
     srand(time(NULL));
@@ -451,6 +489,9 @@ void Game::resetLevel()
 
     ballReleasePressed_ = false;
     ballReleased_ = false;
+
+    wonBanner_.startAnimation(Sprite::AnimationNone);
+    lostBanner_.startAnimation(Sprite::AnimationNone);
 }
 
 void Game::putBallOnPaddle()
@@ -677,7 +718,7 @@ void Game::updateBall(UInt32 deltaMs)
 
         if (++i >= 3)
         {
-            LOGI("Unable to resolve collisions\n");
+            LOGE("Unable to resolve collisions\n");
             break;
         }
     }
@@ -688,4 +729,38 @@ void Game::updateBall(UInt32 deltaMs)
 
     ball_.setCenter(c2);
     ball_.speed() = normalizedSpeed * ball_.speed().length();
+}
+
+void Game::updateStatus(UInt32 deltaMs)
+{
+    if (brick_.isAlive())
+    {
+        if (ball_.getCenter().y() < ball_.getRadius())
+        {
+            if (lostBanner_.currentAnimationId() != Sprite::AnimationDefault)
+            {
+                lostBanner_.startAnimation(Sprite::AnimationDefault);
+            }
+            else if (lostBanner_.animationFinished())
+            {
+                resetLevel();
+            }
+        }
+    }
+    else
+    {
+        if (brick_.sprite().animationFinished())
+        {
+            ball_.speed() = Vector2(0, 0);
+
+            if (wonBanner_.currentAnimationId() != Sprite::AnimationDefault)
+            {
+                wonBanner_.startAnimation(Sprite::AnimationDefault);
+            }
+            else if (wonBanner_.animationFinished())
+            {
+                resetLevel();
+            }
+        }
+    }
 }

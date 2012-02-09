@@ -5,7 +5,7 @@
 Sprite::Sprite()
 : width_(0),
   height_(0),
-  curAnimationId_(-1),
+  curAnimationId_(AnimationNone),
   curAnimationTimeMs_(0)
 {
 }
@@ -14,7 +14,7 @@ Sprite::Sprite( UInt32 width,
                 UInt32 height )
 : width_(width),
   height_(height),
-  curAnimationId_(-1),
+  curAnimationId_(AnimationNone),
   curAnimationTimeMs_(0)
 {
 }

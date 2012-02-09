@@ -11,6 +11,7 @@ class Sprite
 public:
     enum
     {
+        AnimationNone    = -1,
         AnimationDefault = 0
     };
 
@@ -24,6 +25,8 @@ public:
     void render(UInt32 deltaMs, bool debug = false);
 
     void startAnimation(int id);
+
+    inline int currentAnimationId() const { return curAnimationId_; }
 
     bool animationFinished() const;
 

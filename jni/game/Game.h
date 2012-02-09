@@ -34,6 +34,8 @@ private:
     Brick createBrick(const Texture& texture);
     Paddle createPaddle(const Texture& texture);
     Ball createBall(const Texture& texture);
+    Sprite createWonBanner(const Texture& texture);
+    Sprite createLostBanner(const Texture& texture);
 
     void resetLevel();
 
@@ -44,6 +46,8 @@ private:
     void updatePaddle(UInt32 deltaMs);
 
     void updateBall(UInt32 deltaMs);
+
+    void updateStatus(UInt32 deltaMs);
 
     bool debug_;
 
@@ -60,6 +64,8 @@ private:
     Brick brick_;
     Paddle paddle_;
     Ball ball_;
+    Sprite wonBanner_;
+    Sprite lostBanner_;
     UInt32 lastXInput_;
     bool ballReleasePressed_;
     bool ballReleased_;
