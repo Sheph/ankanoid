@@ -12,8 +12,34 @@ TextureCollection::~TextureCollection()
     unloadAllTextures();
 }
 
-bool TextureCollection::addTexture(zip* archive, const std::string& path, Texture& texture)
+bool TextureCollection::addTexture(zip* archive, const std::string& path, TexturePtr& texture)
 {
+    if (!loadTexture(archive, path, texture))
+    {
+        return false;
+    }
+
+    textures_.push_back(texture);
+
+    return true;
+}
+
+void TextureCollection::reload(zip* archive)
+{
+    for ( TextureList::iterator it = textures_.begin();
+          it != textures_.end();
+          ++it )
+    {
+        std::string path = (*it)->path();
+
+        loadTexture(archive, path, *it);
+    }
+}
+
+bool TextureCollection::loadTexture(zip* archive, const std::string& path, TexturePtr& texture)
+{
+    texture.reset(new Texture());
+
     PNGDecoder decoder(archive, path);
 
     if (!decoder.init())
@@ -51,15 +77,13 @@ bool TextureCollection::addTexture(zip* archive, const std::string& path, Textur
         return false;
     }
 
-    texture = Texture(id, decoder.width(), decoder.height());
-
-    textures_.push_back(texture);
+    *texture = Texture(path, id, decoder.width(), decoder.height());
 
     LOGI( "Texture from \"%s\" created: %d, %dx%d\n",
           path.c_str(),
-          id,
-          decoder.width(),
-          decoder.height() );
+          texture->id(),
+          texture->width(),
+          texture->height() );
 
     return true;
 }
@@ -70,7 +94,7 @@ void TextureCollection::unloadAllTextures()
           it != textures_.end();
           ++it )
     {
-        GLuint tmp = it->id();
+        GLuint tmp = (*it)->id();
 
         glDeleteTextures(1, &tmp);
 

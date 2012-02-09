@@ -12,13 +12,19 @@ public:
     TextureCollection();
     ~TextureCollection();
 
-    bool addTexture(zip* archive, const std::string& path, Texture& texture);
+    bool addTexture(zip* archive, const std::string& path, TexturePtr& texture);
+
+    void reload(zip* archive);
+
+    void invalidate();
 
 private:
-    typedef std::list<Texture> TextureList;
+    typedef std::list<TexturePtr> TextureList;
 
     TextureCollection(const TextureCollection& other);
     TextureCollection& operator=(const TextureCollection& other);
+
+    bool loadTexture(zip* archive, const std::string& path, TexturePtr& texture);
 
     void unloadAllTextures();
 

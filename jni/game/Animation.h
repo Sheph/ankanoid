@@ -10,7 +10,7 @@
 class Animation
 {
 public:
-    Animation(const Texture& texture, bool loop);
+    Animation(const TexturePtr& texture, bool loop);
     ~Animation();
 
     void addFrame(const AnimationFrame& frame);
@@ -29,7 +29,7 @@ private:
                       UInt32 width,
                       UInt32 height ) const;
 
-    Texture texture_;
+    TexturePtr texture_;
     bool loop_;
     AnimationFrameMap frames_;
 };

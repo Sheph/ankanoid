@@ -30,12 +30,12 @@ public:
 private:
     static UInt64 getTimeMs();
 
-    Background createBackground(const Texture& texture);
-    Brick createBrick(const Texture& texture);
-    Paddle createPaddle(const Texture& texture);
-    Ball createBall(const Texture& texture);
-    Sprite createWonBanner(const Texture& texture);
-    Sprite createLostBanner(const Texture& texture);
+    Background createBackground(const TexturePtr& texture);
+    Brick createBrick(const TexturePtr& texture);
+    Paddle createPaddle(const TexturePtr& texture);
+    Ball createBall(const TexturePtr& texture);
+    Sprite createWonBanner(const TexturePtr& texture);
+    Sprite createLostBanner(const TexturePtr& texture);
 
     void resetLevel();
 
@@ -48,6 +48,8 @@ private:
     void updateBall(UInt32 deltaMs);
 
     void updateStatus(UInt32 deltaMs);
+
+    bool initialized_;
 
     bool debug_;
 

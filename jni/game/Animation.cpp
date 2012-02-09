@@ -1,7 +1,7 @@
 #include "Animation.h"
 #include <assert.h>
 
-Animation::Animation(const Texture& texture, bool loop)
+Animation::Animation(const TexturePtr& texture, bool loop)
 : texture_(texture),
   loop_(loop)
 {
@@ -72,19 +72,19 @@ void Animation::renderFrame( const AnimationFrame& frame,
     GLfixed subTexU1 = 0;
     GLfixed subTexU2 = 0;
 
-    if (texture_.width() > 1)
+    if (texture_->width() > 1)
     {
-        subTexU1 = (frame.x() * (1U << 16)) / (texture_.width() - 1);
-        subTexU2 = ((frame.x() + frame.width() - 1) * (1U << 16)) / (texture_.width() - 1);
+        subTexU1 = (frame.x() * (1U << 16)) / (texture_->width() - 1);
+        subTexU2 = ((frame.x() + frame.width() - 1) * (1U << 16)) / (texture_->width() - 1);
     }
 
     GLfixed subTexV1 = 0;
     GLfixed subTexV2 = 0;
 
-    if (texture_.height() > 1)
+    if (texture_->height() > 1)
     {
-        subTexV1 = ((texture_.height() - (frame.y() + frame.height())) * (1U << 16)) / (texture_.height() - 1);
-        subTexV2 = ((texture_.height() - 1 - frame.y()) * (1U << 16)) / (texture_.height() - 1);
+        subTexV1 = ((texture_->height() - (frame.y() + frame.height())) * (1U << 16)) / (texture_->height() - 1);
+        subTexV2 = ((texture_->height() - 1 - frame.y()) * (1U << 16)) / (texture_->height() - 1);
     }
 
     GLfixed texCoords[] =
@@ -98,7 +98,7 @@ void Animation::renderFrame( const AnimationFrame& frame,
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    glBindTexture(GL_TEXTURE_2D, texture_.id());
+    glBindTexture(GL_TEXTURE_2D, texture_->id());
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 

@@ -188,7 +188,8 @@ namespace
 }
 
 Game::Game(const std::string& apkPath)
-: debug_(false),
+: initialized_(false),
+  debug_(false),
   apkPath_(apkPath),
   gameWidth_(480),
   gameHeight_(800),
@@ -237,26 +238,41 @@ void Game::init(UInt32 width, UInt32 height)
         LOGE("Cannot open zip file \"%s\"\n", apkPath_.c_str());
     }
 
-    Texture bgTexture;
-    Texture gameTexture;
+    if (!initialized_)
+    {
+        TexturePtr bgTexture;
+        TexturePtr gameTexture;
 
-    textureCollection_.addTexture(zip.archive(), "assets/sprites/background.png", bgTexture);
-    textureCollection_.addTexture(zip.archive(), "assets/sprites/game.png", gameTexture);
+        textureCollection_.addTexture(zip.archive(), "assets/sprites/background.png", bgTexture);
+        textureCollection_.addTexture(zip.archive(), "assets/sprites/game.png", gameTexture);
 
-    bg_ = createBackground(bgTexture);
-    brick_ = createBrick(gameTexture);
-    paddle_ = createPaddle(gameTexture);
-    ball_ = createBall(gameTexture);
-    wonBanner_ = createWonBanner(gameTexture);
-    lostBanner_ = createLostBanner(gameTexture);
+        bg_ = createBackground(bgTexture);
+        brick_ = createBrick(gameTexture);
+        paddle_ = createPaddle(gameTexture);
+        ball_ = createBall(gameTexture);
+        wonBanner_ = createWonBanner(gameTexture);
+        lostBanner_ = createLostBanner(gameTexture);
 
-    wonBanner_.pos() = Vector2( gameWidth_ / 2 - (wonBanner_.width() / 2),
-                                gameHeight_ / 2 - (wonBanner_.height() / 2) );
+        wonBanner_.pos() = Vector2( gameWidth_ / 2 - (wonBanner_.width() / 2),
+                                    gameHeight_ / 2 - (wonBanner_.height() / 2) );
 
-    lostBanner_.pos() = Vector2( gameWidth_ / 2 - (lostBanner_.width() / 2),
-                                 gameHeight_ / 2 - (lostBanner_.height() / 2) );
+        lostBanner_.pos() = Vector2( gameWidth_ / 2 - (lostBanner_.width() / 2),
+                                     gameHeight_ / 2 - (lostBanner_.height() / 2) );
 
-    resetLevel();
+        resetLevel();
+
+        initialized_ = true;
+    }
+    else
+    {
+        textureCollection_.reload(zip.archive());
+    }
+
+    lastTimeMs_ = 0;
+    numFrames_ = 0;
+    accumRenderTimeMs_ = 0;
+    accumTimeMs_ = 0;
+    lastProfileReportTimeMs_ = 0;
 }
 
 void Game::input(UInt32 viewX, UInt32 viewY, bool up)
@@ -346,7 +362,7 @@ UInt64 Game::getTimeMs()
     return ((UInt64)tv.tv_sec * 1000U) + ((UInt64)tv.tv_usec / 1000U);
 }
 
-Background Game::createBackground(const Texture& texture)
+Background Game::createBackground(const TexturePtr& texture)
 {
     static const UInt32 bgTexWidth = 257;
     static const UInt32 bgTexHeight = 512;
@@ -369,7 +385,7 @@ Background Game::createBackground(const Texture& texture)
     return background;
 }
 
-Brick Game::createBrick(const Texture& texture)
+Brick Game::createBrick(const TexturePtr& texture)
 {
     Sprite sprite(70, 38);
 
@@ -402,7 +418,7 @@ Brick Game::createBrick(const Texture& texture)
     return brick;
 }
 
-Paddle Game::createPaddle(const Texture& texture)
+Paddle Game::createPaddle(const TexturePtr& texture)
 {
     Sprite sprite(100, 30);
 
@@ -419,7 +435,7 @@ Paddle Game::createPaddle(const Texture& texture)
     return paddle;
 }
 
-Ball Game::createBall(const Texture& texture)
+Ball Game::createBall(const TexturePtr& texture)
 {
     Sprite sprite(24, 24);
 
@@ -436,7 +452,7 @@ Ball Game::createBall(const Texture& texture)
     return ball;
 }
 
-Sprite Game::createWonBanner(const Texture& texture)
+Sprite Game::createWonBanner(const TexturePtr& texture)
 {
     Sprite sprite(128, 128);
 
@@ -449,7 +465,7 @@ Sprite Game::createWonBanner(const Texture& texture)
     return sprite;
 }
 
-Sprite Game::createLostBanner(const Texture& texture)
+Sprite Game::createLostBanner(const TexturePtr& texture)
 {
     Sprite sprite(128, 128);
 
