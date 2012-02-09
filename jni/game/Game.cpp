@@ -1,14 +1,129 @@
 #include "Game.h"
 #include "Logger.h"
 #include "ZipWrapper.h"
+#include "Utils.h"
 #include <stdlib.h>
 #include <assert.h>
 
+namespace
+{
+    class CollisionDetector
+    {
+    public:
+        CollisionDetector() {}
+        virtual ~CollisionDetector() {}
+
+        virtual bool detect( const Vector2& c1,
+                             const Vector2& c2,
+                             float radius,
+                             Vector2& newC ) = 0;
+
+        virtual Vector2 resolve( const Vector2& c1,
+                                 const Vector2& c2,
+                                 const Vector2& newC,
+                                 Vector2& normalizedDirection ) = 0;
+    };
+
+    class WallCollisionDetector : public CollisionDetector
+    {
+    public:
+        WallCollisionDetector(const Vector2& p1, const Vector2& p2)
+        : p1_(p1),
+          p2_(p2)
+        {
+        }
+
+        ~WallCollisionDetector()
+        {
+        }
+
+        virtual bool detect( const Vector2& c1,
+                             const Vector2& c2,
+                             float radius,
+                             Vector2& newC )
+        {
+            return detectLineCircleCollision( p1_,
+                                              p2_,
+                                              c1,
+                                              c2,
+                                              radius,
+                                              newC );
+        }
+
+        virtual Vector2 resolve( const Vector2& c1,
+                                 const Vector2& c2,
+                                 const Vector2& newC,
+                                 Vector2& normalizedDirection )
+        {
+            return generateLineCircleCollisionResponse( p1_,
+                                                        p2_,
+                                                        c1,
+                                                        c2,
+                                                        newC,
+                                                        normalizedDirection );
+        }
+
+    private:
+        Vector2 p1_;
+        Vector2 p2_;
+    };
+
+    class BrickSideCollisionDetector : public CollisionDetector
+    {
+    public:
+        BrickSideCollisionDetector(const Vector2& p1, const Vector2& p2, bool& touched)
+        : p1_(p1),
+          p2_(p2),
+          touched_(touched)
+        {
+        }
+
+        ~BrickSideCollisionDetector()
+        {
+        }
+
+        virtual bool detect( const Vector2& c1,
+                             const Vector2& c2,
+                             float radius,
+                             Vector2& newC )
+        {
+            return detectLineSegmentCircleCollision( p1_,
+                                                     p2_,
+                                                     c1,
+                                                     c2,
+                                                     radius,
+                                                     newC );
+        }
+
+        virtual Vector2 resolve( const Vector2& c1,
+                                 const Vector2& c2,
+                                 const Vector2& newC,
+                                 Vector2& normalizedDirection )
+        {
+            touched_ = true;
+
+            return generateLineCircleCollisionResponse( p1_,
+                                                        p2_,
+                                                        c1,
+                                                        c2,
+                                                        newC,
+                                                        normalizedDirection );
+        }
+
+    private:
+        Vector2 p1_;
+        Vector2 p2_;
+        bool& touched_;
+    };
+}
+
 Game::Game(const std::string& apkPath)
-: debug_(false),
+: debug_(true),
   apkPath_(apkPath),
   gameWidth_(480),
   gameHeight_(800),
+//  gameWidth_(120),
+//  gameHeight_(220),
   viewWidth_(gameWidth_),
   viewHeight_(gameHeight_),
   lastXInput_(0),
@@ -80,6 +195,9 @@ void Game::input(UInt32 viewX, UInt32 viewY, bool up)
     {
         ballReleasePressed_ = true;
     }
+
+    brick_.sprite().pos().setX(x);
+    brick_.sprite().pos().setY(y);
 }
 
 void Game::render()
@@ -251,6 +369,8 @@ void Game::resetLevel()
         300 + (rand() % (gameHeight_ - brick_.sprite().height() - 300));
 
     brick_.sprite().pos() = Vector2(brickX, brickY);
+    brick_.setAlive(true);
+    brick_.sprite().startAnimation(Sprite::AnimationDefault);
 
     UInt32 paddleX = (bg_.left() + bg_.right()) / 2 - (paddle_.sprite().width() / 2);
     UInt32 paddleY = 100;
@@ -357,5 +477,114 @@ void Game::updateBall(UInt32 deltaMs)
         ball_.speed() = speed;
     }
 
-    ball_.sprite().pos() += ball_.speed() * deltaS;
+    Vector2 c1 = ball_.getCenter();
+    Vector2 c2 = c1 + ball_.speed() * deltaS;
+    float radius = ball_.getRadius();
+    Vector2 normalizedSpeed = ball_.speed();
+    normalizedSpeed.normalize();
+
+    UInt32 i = 0;
+
+    while (true)
+    {
+        bool brickTouched = false;
+
+        WallCollisionDetector rightWallDetector(Vector2(bg_.right(), 1), Vector2(bg_.right(), 0));
+        WallCollisionDetector leftWallDetector(Vector2(bg_.left(), 0), Vector2(bg_.left(), 1));
+        WallCollisionDetector topWallDetector(Vector2(0, gameHeight_), Vector2(1, gameHeight_));
+        WallCollisionDetector bottomWallDetector(Vector2(1, 0), Vector2(0, 0));
+
+        Vector2 brickBoundPos = brick_.boundAbsPos();
+
+        BrickSideCollisionDetector leftBrickSideDetector(
+            Vector2(brickBoundPos.x(), brickBoundPos.y() + brick_.boundHeight()),
+            Vector2(brickBoundPos.x(), brickBoundPos.y()),
+            brickTouched );
+        BrickSideCollisionDetector bottomBrickSideDetector(
+            Vector2(brickBoundPos.x(), brickBoundPos.y()),
+            Vector2(brickBoundPos.x() + brick_.boundWidth(), brickBoundPos.y()),
+            brickTouched );
+        BrickSideCollisionDetector rightBrickSideDetector(
+            Vector2(brickBoundPos.x() + brick_.boundWidth(), brickBoundPos.y()),
+            Vector2(brickBoundPos.x() + brick_.boundWidth(), brickBoundPos.y() + brick_.boundHeight()),
+            brickTouched );
+        BrickSideCollisionDetector topBrickSideDetector(
+            Vector2(brickBoundPos.x() + brick_.boundWidth(), brickBoundPos.y() + brick_.boundHeight()),
+            Vector2(brickBoundPos.x(), brickBoundPos.y() + brick_.boundHeight()),
+            brickTouched );
+
+        std::vector<CollisionDetector*> collisionDetectors;
+
+        collisionDetectors.push_back(&rightWallDetector);
+        collisionDetectors.push_back(&leftWallDetector);
+        collisionDetectors.push_back(&topWallDetector);
+        collisionDetectors.push_back(&bottomWallDetector);
+
+        if (brick_.isAlive())
+        {
+            collisionDetectors.push_back(&leftBrickSideDetector);
+            collisionDetectors.push_back(&bottomBrickSideDetector);
+            collisionDetectors.push_back(&rightBrickSideDetector);
+            collisionDetectors.push_back(&topBrickSideDetector);
+        }
+
+        Vector2 initialNormalizedDirection = (c2 - c1);
+
+        initialNormalizedDirection.normalize();
+
+        Vector2 newC;
+        CollisionDetector* found = NULL;
+        float dist = 0.0f;
+
+        for ( std::vector<CollisionDetector*>::iterator it = collisionDetectors.begin();
+              it != collisionDetectors.end();
+              ++it )
+        {
+            Vector2 tmpNewC;
+
+            if (!(*it)->detect( c1,
+                                c2,
+                                radius,
+                                tmpNewC ))
+            {
+                continue;
+            }
+
+            float tmpDist = (tmpNewC - c1).dot(initialNormalizedDirection);
+
+            if (!found)
+            {
+                newC = tmpNewC;
+                found = *it;
+                dist = tmpDist;
+            }
+            else if (tmpDist < dist)
+            {
+                newC = tmpNewC;
+                found = *it;
+                dist = tmpDist;
+            }
+        }
+
+        if (!found)
+        {
+            break;
+        }
+
+        c2 = found->resolve( c1,
+                             c2,
+                             newC,
+                             normalizedSpeed );
+
+        c1 = newC;
+
+        if (++i >= 3)
+        {
+            LOGI("Unable to resolve collisions\n");
+            break;
+        }
+    }
+
+    ball_.setCenter(c2);
+    ball_.speed() = normalizedSpeed * ball_.speed().length();
 }

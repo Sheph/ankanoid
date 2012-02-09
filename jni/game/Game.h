@@ -7,6 +7,7 @@
 #include "Brick.h"
 #include "Paddle.h"
 #include "Ball.h"
+#include <vector>
 
 class Game
 {
@@ -21,9 +22,13 @@ public:
     void render();
 
 private:
-    static const UInt32 profileReportTimeoutMs_ = 3000;
+    static const UInt32 profileReportTimeoutMs_ = 5000;
+    //static const float paddleSpeed_ = 600;
+    //static const float ballSpeed_ = 400;
+    //static const float ballReleaseAngleDeg_ = 15;
+
     static const float paddleSpeed_ = 600;
-    static const float ballSpeed_ = 400;
+    static const float ballSpeed_ = 500;
     static const float ballReleaseAngleDeg_ = 15;
 
     static UInt64 getTimeMs();

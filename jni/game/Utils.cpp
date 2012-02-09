@@ -43,14 +43,24 @@ bool detectLineCircleCollision( const Vector2& p1,
                                 Vector2& newC )
 {
     float d1 = linePointDistance(p1, p2, c1);
+
+    if (d1 < -radius)
+    {
+        /*
+         * We've already passed the line, no collision.
+         */
+
+        return false;
+    }
+
     float d2 = linePointDistance(p1, p2, c2);
 
     float d2d1 = d2 - d1;
 
-    if (d2d1 == 0.0f)
+    if (d2d1 >= 0.0f)
     {
         /*
-         * Floats can be divided by 0 safely, but just in case.
+         * Circle is not floating towards the normal, no collision.
          */
 
         return false;
@@ -62,17 +72,17 @@ bool detectLineCircleCollision( const Vector2& p1,
 
     float t = (radius - d1) / d2d1;
 
-    if ( (t < 0.0f) || (t > 1.0f) )
+    if (t > 1.0f)
     {
         /*
-         * The solution is not within our trajectory, no collision.
+         * The solution is after our trajectory end, no collision.
          */
 
         return false;
     }
 
     /*
-     * We have the collision, calculate the collision point.
+     * We have/had the collision, calculate the collision point.
      */
 
     newC = c1 + (c2 - c1) * t;
@@ -101,11 +111,8 @@ bool detectLineSegmentCircleCollision( const Vector2& p1,
                                        const Vector2& c1,
                                        const Vector2& c2,
                                        float radius,
-                                       Vector2& newC,
-                                       bool& collisionIsOnEndpoint )
+                                       Vector2& newC )
 {
-    collisionIsOnEndpoint = false;
-
     if (!detectLineCircleCollision( p1,
                                     p2,
                                     c1,
@@ -143,43 +150,98 @@ bool detectLineSegmentCircleCollision( const Vector2& p1,
 
     float t = ((newC - p1).dot(tmp)) / tmpLength2;
 
+    tmp = (c2 - c1);
+
+    tmp.normalize();
+
+    float newCC1ProjLen = (c1 - newC).dot(tmp);
+
+    Vector2 p;
+    float d = 0.0f;
+    bool onSegment = false;
+
     if ((t > 0.0f) && (t < 1.0f))
     {
         /*
          * The projection is inside the line segment, this means
-         * that the 'newC's tangent point is on the line segment,
-         * we're done.
+         * that the 'newC's tangent point is on the line segment.
          */
 
-        return true;
-    }
+        onSegment = true;
 
-    Vector2 p;
+        if (newCC1ProjLen <= 0.0f)
+        {
+            /*
+             * 'c1' is before 'newC', there's a collision
+             */
 
-    if (t <= 0.0f)
-    {
-        p = p1;
+            return true;
+        }
+
+        /*
+         * 'c1' is after 'newC', we must decide if it's tangent to "p1->p2".
+         */
+
+        d = linePointDistance(newC, c2, p1);
+
+        if (d < 0.0f)
+        {
+            d = linePointDistance(newC, c2, p2);
+
+            if (d > 0.0f)
+            {
+                /*
+                 * It's tangent, collision is present.
+                 */
+
+                return true;
+            }
+            else
+            {
+                /*
+                 * Not tangent and floats in 'p2' direction.
+                 */
+
+                d = fabs(d);
+                p = p2;
+            }
+        }
+        else
+        {
+            /*
+             * Not tangent and floats in 'p1' direction.
+             */
+
+            p = p1;
+        }
     }
     else
     {
-        p = p2;
-    }
+        if (t <= 0.0f)
+        {
+            p = p1;
+        }
+        else
+        {
+            p = p2;
+        }
 
-    /*
-     * 'p' is the endpoint of the line segment closest to 'newC'.
-     * Find absolute distance between "newC->c2" and "p".
-     */
-
-    float d = fabs(linePointDistance(newC, c2, p));
-
-    if (d > radius)
-    {
         /*
-         * The distance is greater than radius, there's no way for collision,
-         * we're done.
+         * 'p' is the endpoint of the line segment closest to 'newC'.
+         * Find absolute distance between "newC->c2" and "p".
          */
 
-        return false;
+        d = fabs(linePointDistance(newC, c2, p));
+
+        if (d > radius)
+        {
+            /*
+             * The distance is greater than radius, there's no way for collision,
+             * we're done.
+             */
+
+            return false;
+        }
     }
 
     /*
@@ -203,15 +265,64 @@ bool detectLineSegmentCircleCollision( const Vector2& p1,
 
     float offset = sqrt(radius * radius - d * d);
 
-    tmp = (c2 - newC);
+    float newCPProjLen = (p - newC).dot(tmp);
 
-    tmp.normalize();
+    if (newCC1ProjLen > (newCPProjLen + offset))
+    {
+        /*
+         * We've already flew over the endpoint, no collision.
+         */
 
-    tmp *= ((p - newC).dot(tmp) - offset);
+        return false;
+    }
 
-    newC += tmp;
+    if (onSegment)
+    {
+        /*
+         * If we're on segment there's a collision and 'newC' is already correct.
+         */
+    }
+    else
+    {
+        /*
+         * If we're not on segment we might be floating in air, unless 'c2' is touching
+         * the endpoint.
+         */
 
-    collisionIsOnEndpoint = true;
+        float newCC2ProjLen = (c2 - newC).dot(tmp);
+
+        if (newCC2ProjLen < (newCPProjLen - offset))
+        {
+            /*
+             * 'c2' isn't touching the endpoint, we're in air.
+             */
+
+            return false;
+        }
+
+        /*
+         * Fixup for 'newC', it should touch the endpoint.
+         */
+
+        tmp *= (newCPProjLen - offset);
+
+        newC += tmp;
+    }
 
     return true;
+}
+
+Vector2 generateLineCircleCollisionResponse( const Vector2& p1,
+                                             const Vector2& p2,
+                                             const Vector2& c1,
+                                             const Vector2& c2,
+                                             const Vector2& newC,
+                                             Vector2& normalizedDirection )
+{
+    Vector2 tmp2 = (c2 - c1);
+    float c1c2Length = tmp2.normalize();
+
+    normalizedDirection = (p2 - p1).reflect(tmp2);
+
+    return (newC + (normalizedDirection * c1c2Length));
 }

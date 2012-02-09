@@ -10,3 +10,8 @@ void Brick::render(UInt32 deltaMs, bool debug)
         drawDebugRectangle(sprite_.pos() + boundOffset_, boundWidth_, boundHeight_, false);
     }
 }
+
+Vector2 Brick::boundAbsPos() const
+{
+    return sprite().pos() + boundOffset();
+}

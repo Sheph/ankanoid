@@ -32,6 +32,12 @@ public:
 
     inline Vector2& speed() { return speed_; }
 
+    float getRadius() const { return (sprite_.width() / 2); }
+
+    inline Vector2 getCenter() const { return sprite_.pos() + Vector2(getRadius(), getRadius()); }
+
+    inline void setCenter(const Vector2& center) { sprite_.pos() = center - Vector2(getRadius(), getRadius()); }
+
 private:
     Sprite sprite_;
     Vector2 speed_;
