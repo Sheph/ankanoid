@@ -1,3 +1,5 @@
+Android Arkanoid - a small simple Android test game
+
 How to build Android Arkanoid (Ankanoid)
 ----------------------------------------
 1. Run <NDK_ROOT>/ndk-build from here
